@@ -61,7 +61,7 @@ byte bcdToDec(byte val)
 	return((val / 16 * 10) + (val % 16));
 }
 
-//Defining a special character to use as brightness icon
+// Defining a special character to use as brightness icon
 byte sunCharacter[8] = {
 	0b00000,
 	0b00100,
@@ -115,16 +115,16 @@ void loop()
 
 	if (alarmActive)
 	{
-		if (millis() - alarmTurnedOnAt < alarmDuration) //For the duration of alarm
+		if (millis() - alarmTurnedOnAt < alarmDuration) // For the duration of alarm
 		{
 			digitalWrite(backlightLCD, HIGH);
-			if (millis() - alarmStepTime > 7000) //Once in seven seconds, will  reach full brightness at 30 minutes
+			if (millis() - alarmStepTime > 7000) // Once in seven seconds, will  reach full brightness at 30 minutes
 			{
 				ChangeBrightness(1);
 				alarmStepTime = millis();
 			}
 		}
-		else //Once at the end of alarm duration
+		else // Once at the end of alarm duration
 		{
 			brightness = 0;
 			SetBrightness(brightness);
@@ -135,18 +135,18 @@ void loop()
 
 	if (backlightOnForButton)
 	{
-		if (millis() - pushedButtonAt < backlightDuration) //For the backlight duration
+		if (millis() - pushedButtonAt < backlightDuration) // For the backlight duration
 		{
 			digitalWrite(backlightLCD, HIGH);
 		}
-		else //Once at the end of backlight duration
+		else // Once at the end of backlight duration
 		{
 			digitalWrite(backlightLCD, LOW);
 			backlightOnForButton = false;
 		}
 	}
 
-	if (irrecv.decode(&results)) {		//If a button is pressed on the IR remote
+	if (irrecv.decode(&results)) {		// If a button is pressed on the IR remote
 		if (results.value == 0xFFA25D)
 		{
 			LightOn();
@@ -189,10 +189,12 @@ void loop()
 		}
 		irrecv.resume();
 	}
-	//delay(100);
+	// delay(100);
 }
 
-void ListenForButtonPress() //https://www.arduino.cc/en/Tutorial/Debounce
+// Most of the code here is to make buttons work well. See lines 225-226, 244-245, 263-264 for what happens on button press.   
+// https://www.arduino.cc/en/Tutorial/Debounce 
+void ListenForButtonPress()
 {
 	readingBtnAlarmHour = digitalRead(btnAlarmHour);
 	readingBtnAlarmMinute = digitalRead(btnAlarmMinute);
