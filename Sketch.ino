@@ -88,7 +88,8 @@ void setup()
 	lcd.begin(16, 2);
 	/* set the initial time here:
 	   DS3231 seconds, minutes, hours, day(1 for sunday, 2 for monday...), date, month, year
-	   Set the time by uncommenting the following line after editing the values and load the sketch on your arduino. Right after that, comment out the line and load the sketch again. */
+	   Set the time by uncommenting the following line after editing the values and load the sketch on your arduino. Right after that,
+	    comment out the line and load the sketch again. */
 
 	// setDS3231time(00,59,23,1,31,12,16);
 }
