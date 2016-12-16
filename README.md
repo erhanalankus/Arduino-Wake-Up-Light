@@ -1,5 +1,5 @@
 # Arduino Wake Up Light
-An alarm clock which turns on the lights very slowly.
+An alarm clock which turns on the lights very slowly. Lights can be controlled manually with an IR remote.
 Video: https://youtu.be/UwAyBwA90BE
 
 
