@@ -7,7 +7,7 @@ Video: https://youtu.be/UwAyBwA90BE
 
 # Step 1: Build the circuit
 
-![Schematics](https://raw.githubusercontent.com/erhanalankus/Arduino-Wake-Up-Light/master/schematics.jpg)
+![Schematics](https://raw.githubusercontent.com/erhanalankus/Arduino-Wake-Up-Light/master/schematics_.jpg)
 
 # Step 2: Set the time
 
