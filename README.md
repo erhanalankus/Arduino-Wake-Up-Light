@@ -15,7 +15,7 @@ Before uploading the sketch to your Arduino, change the values at line 93 with t
 
 # Step 3: Set the remote
 
-Go to line 148, there you will find what happens for which remote button. Those values most likely won't work with the remote that you are using. Watch this video and you'll learn how to setup your remote: https://youtu.be/ftdJ0R_5NZk
+Go to line 148, there you will find what happens for which remote button. Those values most likely won't work with the remote that you are using. Watch this video and you'll learn how to setup your remote: https://youtu.be/ftdJ0R_5NZk The remote is optional. Its only job is to adjust the brightness of the LEDs manually.
 
 # Step 4: Using the device
 
