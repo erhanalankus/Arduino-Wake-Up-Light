@@ -16,3 +16,7 @@ Before uploading the sketch to your Arduino, change the values at line 93 with t
 # Step 3: Set the remote
 
 Go to line 148, there you will find what happens for what remote button. Those values most likely won't work with the remote that you are using. Watch this video and you'll learn how to setup your remote: https://youtu.be/ftdJ0R_5NZk
+
+# Step 4: Using the device
+
+There are three buttons. First two buttons set the alarm, the third button toggles alarm on/off. When the alarm is active, brightness of the lights will increase 1 unit every 7 seconds. Maximum brightness value is 255. It will take 30 minutes to reach full brightness and after an hour, the lights will turn off. You can change alarm duration at line 24 and the speed at line 120.
