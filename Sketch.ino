@@ -77,7 +77,7 @@ void setup()
 {
 	Wire.begin();
 	irrecv.enableIRIn();
-	//Serial.begin(9600);
+	Serial.begin(9600);
 	pinMode(backlightLCD, OUTPUT);
 	pinMode(ledMosfet, OUTPUT);
 	pinMode(btnAlarmHour, INPUT);
@@ -100,7 +100,7 @@ void loop()
 	if (millis() - lastTimeReading > 1000) //Once every second
 	{
 		ReadTime();
-		//DisplayTimeOnSerialMonitor();
+		DisplayTimeAndDateOnSerialMonitor();
 		RefreshLCD();
 		if (alarmOn)
 		{
@@ -278,8 +278,8 @@ void ReadTime()
 	readDS3231time(&second, &minute, &hour, &dayOfWeek, &dayOfMonth, &month, &year);
 }
 
-/*
-void DisplayTimeOnSerialMonitor()
+
+void DisplayTimeAndDateOnSerialMonitor()
 {
 	Serial.print(hour, DEC);
 	Serial.print(":");
@@ -325,7 +325,7 @@ void DisplayTimeOnSerialMonitor()
 		break;
 	}
 }
-*/
+
 
 void RefreshLCD()
 {
