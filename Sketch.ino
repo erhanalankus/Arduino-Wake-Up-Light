@@ -1,3 +1,28 @@
+/*
+My IR Remote codes, see this video to find out the codes for your remote: https://youtu.be/ftdJ0R_5NZk
+
+PLAY: FFA25D
+EQ:	  FF22DD
+CH+:  FFE21D
+CH-:  FF629D
+VOL+: FFC23D
+VOL-: FF02FD
+0:    FFE01F
+PREV: FFA857
+NEXT: FF906F
+1:    FF6897
+2:    FF9867
+3:    FFB04F
+4:    FF30CF
+5:    FF18E7
+6:    FF7A85
+7:    FF10EF
+8:    FF38C7
+9:    FF5AA5
+PICK SONG: FF42BD
+CH SET: FF52AD
+*/
+
 #include <IRremote.h>
 #include <Wire.h>
 #include <LiquidCrystal.h>
@@ -7,9 +32,9 @@ int RECV_PIN = 14;
 IRrecv irrecv(RECV_PIN);
 decode_results results;
 
-byte second, minute, hour, dayOfWeek, dayOfMonth, month, year; // Values to read from DS3231
-byte alarmHour = 15;
-byte alarmMinute = 15;
+byte second, minute, hour, dayOfWeek, dayOfMonth, month, year; // Values to read from DS3231 RTC Module
+byte alarmHour = 5;
+byte alarmMinute = 0;
 bool alarmOn = true;
 bool alarmActive = false;
 long lastTimeReading = 0;
@@ -21,7 +46,7 @@ const int btnAlarmToggle = 5;
 const int ledMosfet = 6;
 
 long alarmTurnedOnAt = 0;
-long alarmDuration = 3600000; //1 hour.
+long alarmDuration = 10800000; //3 hours.
 long alarmStepTime = 0;
 
 long pushedButtonAt = 0;
@@ -61,7 +86,7 @@ byte bcdToDec(byte val)
 	return((val / 16 * 10) + (val % 16));
 }
 
-// Defining a special character to use as brightness icon
+//Defining a special character to use as brightness icon
 byte sunCharacter[8] = {
 	0b00000,
 	0b00100,
@@ -88,8 +113,7 @@ void setup()
 	lcd.begin(16, 2);
 	/* set the initial time here:
 	   DS3231 seconds, minutes, hours, day(1 for sunday, 2 for monday...), date, month, year
-	   Set the time by uncommenting the following line after editing the values and load the sketch on your arduino. Right after that,
-	    comment out the line and load the sketch again. */
+	   Set the time by uncommenting the following line after editing the values and load the sketch on your arduino. Right after that, comment out the line and load the sketch again. */
 
 	// setDS3231time(00,59,23,1,31,12,16);
 }
@@ -115,16 +139,16 @@ void loop()
 
 	if (alarmActive)
 	{
-		if (millis() - alarmTurnedOnAt < alarmDuration) // For the duration of alarm
+		if (millis() - alarmTurnedOnAt < alarmDuration) //For the duration of alarm
 		{
 			digitalWrite(backlightLCD, HIGH);
-			if (millis() - alarmStepTime > 7000) // Once in seven seconds, will  reach full brightness at 30 minutes
+			if (millis() - alarmStepTime > 7000) //Once in seven seconds, will  reach full brightness at 30 minutes
 			{
 				ChangeBrightness(1);
 				alarmStepTime = millis();
 			}
 		}
-		else // Once at the end of alarm duration
+		else //Once at the end of alarm duration
 		{
 			brightness = 0;
 			SetBrightness(brightness);
@@ -135,18 +159,18 @@ void loop()
 
 	if (backlightOnForButton)
 	{
-		if (millis() - pushedButtonAt < backlightDuration) // For the backlight duration
+		if (millis() - pushedButtonAt < backlightDuration) //For the backlight duration
 		{
 			digitalWrite(backlightLCD, HIGH);
 		}
-		else // Once at the end of backlight duration
+		else //Once at the end of backlight duration
 		{
 			digitalWrite(backlightLCD, LOW);
 			backlightOnForButton = false;
 		}
 	}
 
-	if (irrecv.decode(&results)) {		// If a button is pressed on the IR remote
+	if (irrecv.decode(&results)) {		//If a button is pressed on the IR remote
 		if (results.value == 0xFFA25D)
 		{
 			LightOn();
@@ -187,14 +211,48 @@ void loop()
 			ChangeBrightness(1);
 			PushedAnyButton();
 		}
+		if (results.value == 0xFF6897)
+		{
+			if (backlightOnForButton)
+			{
+				IncreaseAlarmHour();
+				PushedAnyButton();
+			}
+			else
+			{
+				PushedAnyButton();
+			}
+		}
+		if (results.value == 0xFF9867)
+		{
+			if (backlightOnForButton)
+			{
+				IncreaseAlarmMinute();
+				PushedAnyButton();
+			}
+			else
+			{
+				PushedAnyButton();
+			}
+		}
+		if (results.value == 0xFFB04F)
+		{
+			if (backlightOnForButton)
+			{
+				ToggleAlarm();
+				PushedAnyButton();
+			}
+			else
+			{
+				PushedAnyButton();
+			}
+		}
 		irrecv.resume();
 	}
-	// delay(100);
+	//delay(100);
 }
 
-// Most of the code here is to make buttons work well. See lines 225-226, 244-245, 263-264 for what happens on button press.   
-// https://www.arduino.cc/en/Tutorial/Debounce 
-void ListenForButtonPress()
+void ListenForButtonPress() //https://www.arduino.cc/en/Tutorial/Debounce
 {
 	readingBtnAlarmHour = digitalRead(btnAlarmHour);
 	readingBtnAlarmMinute = digitalRead(btnAlarmMinute);
