@@ -14,8 +14,10 @@ bool alarmOn = true;
 bool alarmActive = false;
 long lastTimeReading = 0;
 
-const int backlightLCD = 9;
+byte hourInTheMorningToTurnOnBacklight = 8;
+byte hourInTheNightToSetSleepMode = 2;
 
+const int backlightLCD = 9;
 const int LEDStrip12V = 6;
 const int LEDStrip6V = 5;
 
@@ -84,11 +86,11 @@ void loop()
 		ReadTime();
 		lastTimeReading = millis();
 		CheckAlarmEveryMinute();
-		if (HourStart())
+		if (HourStart()) //Once every hour
 		{
 			CheckDayOrNight();
-			DisableBacklightOverrideAt(6);
-			AdjustSettingsForSleepTimeAt(2);
+			TurnBacklightOnAtLatestPossibleWakeUpTime();
+			SetSleepModeAtSleepTime();
 		}
 		RefreshLCD();
 	}
@@ -186,6 +188,7 @@ void loop()
 		if (results.value == 0xFF38C7) //8 button
 		{
 			backlightManuallyTurnedOff = !backlightManuallyTurnedOff;
+			activeLED = LEDStrip12V;
 			PushedAnyButton();
 		}
 
@@ -204,8 +207,8 @@ void CheckAlarmEveryMinute() {
 	}
 }
 
-void DisableBacklightOverrideAt(int hourToDisableBacklightOverride) {
-	if (hour == hourToDisableBacklightOverride)
+void TurnBacklightOnAtLatestPossibleWakeUpTime() {
+	if (hour == hourInTheMorningToTurnOnBacklight)
 	{
 		backlightManuallyTurnedOff = false;
 	}
@@ -435,8 +438,8 @@ bool HourStart() {
 	return false;
 }
 
-void AdjustSettingsForSleepTimeAt(int hourToSwitchToSleepMode) {
-	if (hour == hourToSwitchToSleepMode)
+void SetSleepModeAtSleepTime() {
+	if (hour == hourInTheNightToSetSleepMode)
 	{
 		backlightManuallyTurnedOff = true;
 		brightness = 0;
