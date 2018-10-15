@@ -1,39 +1,51 @@
 #include <IRremote.h>
+#include <LiquidCrystal_I2C.h>
 #include <Wire.h>
-#include <LiquidCrystal.h>
 
-LiquidCrystal lcd(12, 11, 10, 2, 8, 7);
+// Set the LCD address to 0x3F for a 16 chars and 2 line display
+// You can find the address of your I2C device using https://playground.arduino.cc/Main/I2cScanner
+LiquidCrystal_I2C lcd(0x3F, 16, 2);
+
+// 14 is A0 on Arduino UNO
 int RECV_PIN = 14;
 IRrecv irrecv(RECV_PIN);
 decode_results results;
 
+const int backlightLCD = 9;
+const int WhiteLEDStrip = 5;
+const int RedLEDStrip = 6;
+
+int activeLED = WhiteLEDStrip;
+
+// Defining a special character to use as brightness icon
+byte sunCharacter[8] = {
+	0b00000,
+	0b00100,
+	0b10101,
+	0b01110,
+	0b11011,
+	0b01110,
+	0b10101,
+	0b00100
+};
+
+int brightness = 0;
+int brightnessStep = 51;
+int smallBrightnessStep = 10;
+bool lightOn = false;
+
 byte second, minute, hour, dayOfWeek, dayOfMonth, month, year; // Values to read from DS3231 RTC Module
 byte alarmHour = 6;
-byte alarmMinute = 0;
+byte alarmMinute = 30;
 bool alarmOn = true;
 bool alarmActive = false;
 long lastTimeReading = 0;
-
-byte hourInTheMorningToTurnOnBacklight = 8;
-byte hourInTheNightToSetSleepMode = 2;
-
-const int backlightLCD = 9;
-const int LEDStrip12V = 6;
-const int LEDStrip6V = 5;
-
-int activeLED = LEDStrip12V;
 
 long alarmTurnedOnAt = 0;
 long alarmDuration = 14400000; //4 hours.
 long alarmStepTime = 0;
 
-int brightness = 0;
-int softLightBrightness = 0;
-int brightnessStep = 51;
-int smallBrightnessStep = 10;
-bool lightOn = false;
-
-int backlightBrightnessForNight = 20;
+int backlightBrightnessForNight = 1;
 int backlightBrightnessForDay = 255;
 bool isNight = false;
 bool backlightManuallyTurnedOff = false;
@@ -50,58 +62,50 @@ byte bcdToDec(byte val)
 	return((val / 16 * 10) + (val % 16));
 }
 
-//Defining a special character to use as brightness icon
-byte sunCharacter[8] = {
-	0b00000,
-	0b00100,
-	0b10101,
-	0b01110,
-	0b11011,
-	0b01110,
-	0b10101,
-	0b00100
-};
-
 void setup()
 {
 	Wire.begin();
-	irrecv.enableIRIn();
-	pinMode(backlightLCD, OUTPUT);
-	pinMode(LEDStrip12V, OUTPUT);
-	pinMode(LEDStrip6V, OUTPUT);
 
+	// initialize the LCD
 	lcd.createChar(0, sunCharacter);
-	lcd.begin(16, 2);
+	lcd.begin();
+
+	irrecv.enableIRIn();
+
+	pinMode(backlightLCD, OUTPUT);
+	pinMode(WhiteLEDStrip, OUTPUT);
+	pinMode(RedLEDStrip, OUTPUT);
+	analogWrite(WhiteLEDStrip, 0);
+	analogWrite(RedLEDStrip, 0);
+	CheckDayOrNight();
+
 	/* set the initial time here:
 	   DS3231 seconds, minutes, hours, day(1 for sunday, 2 for monday...), date, month, year
 	   Set the time by uncommenting the following line after editing the values and load the sketch on your arduino. Right after that, comment out the line and load the sketch again. */
-
 	   // setDS3231time(00,59,23,1,31,12,16);
 }
 
 void loop()
 {
-	if (millis() - lastTimeReading > 1000) //Once every second
+	if (OnceEverySecond())
 	{
 		ReadTime();
 		lastTimeReading = millis();
-		CheckAlarmEveryMinute();
-		if (HourStart()) //Once every hour
+		if (second == 0)		//Once every minute
 		{
-			CheckDayOrNight();
-			TurnBacklightOnAtLatestPossibleWakeUpTime();
-			SetSleepModeAtSleepTime();
-		}
-		RefreshLCD();
-	}
+			if (alarmOn)
+			{
+				CheckAlarm();
+			}
 
-	if (!backlightManuallyTurnedOff)
-	{
-		LCDBacklight();
-	}
-	else
-	{
-		analogWrite(backlightLCD, 0);
+			if (minute == 0)	//Once every hour
+			{
+				CheckDayOrNight();
+			}
+		}
+
+		SetLCDBacklight();
+		RefreshLCD();
 	}
 
 	if (alarmActive)
@@ -181,62 +185,91 @@ void loop()
 
 		if (results.value == 0xFF42BD) //PICK SONG button
 		{
-			ToggleLedMosfet();
+			ToggleActiveLEDStrip();
 			PushedAnyButton();
 		}
 
 		if (results.value == 0xFF38C7) //8 button
 		{
 			backlightManuallyTurnedOff = !backlightManuallyTurnedOff;
-			activeLED = LEDStrip12V;
 			PushedAnyButton();
 		}
 
 		irrecv.resume();
-	}
-	delay(100); //Documentation recommended this, but it may not be necessary.
-}
 
-void CheckAlarmEveryMinute() {
-	if (alarmOn)
-	{
-		if (second == 0)
-		{
-			CheckAlarm();
-		}
+		// This delay is recommended by the library.
+		delay(100);
 	}
 }
 
-void TurnBacklightOnAtLatestPossibleWakeUpTime() {
-	if (hour == hourInTheMorningToTurnOnBacklight)
+void LightOn() {
+	if (brightness != 255)
 	{
-		backlightManuallyTurnedOff = false;
-	}
-}
-
-void LCDBacklight() {
-	if (isNight)
-	{
-		analogWrite(backlightLCD, backlightBrightnessForNight);
+		brightness = 255;
+		SetBrightness(brightness);
 	}
 	else
 	{
-		analogWrite(backlightLCD, backlightBrightnessForDay);
+		return;
 	}
 }
 
-void ToggleLedMosfet() {
-	if (activeLED == LEDStrip12V)
+void LightOff() {
+	if (lightOn)
 	{
-		activeLED = LEDStrip6V;
-		analogWrite(LEDStrip12V, 0);
 		brightness = 0;
+		SetBrightness(brightness);
 	}
 	else
 	{
-		activeLED = LEDStrip12V;
-		analogWrite(LEDStrip6V, 0);
-		brightness = 0;
+		return;
+	}
+}
+
+void SetBrightness(int brightnessValue)
+{
+	analogWrite(activeLED, brightnessValue);
+	if (brightnessValue == 0)
+	{
+		lightOn = false;
+	}
+	else
+	{
+		lightOn = true;
+	}
+}
+
+void PushedAnyButton()
+{
+	if (alarmActive)
+	{
+		alarmActive = false;
+		LightOff();
+	}
+}
+
+void ToggleActiveLEDStrip() {
+	LightOff();
+
+	if (activeLED == WhiteLEDStrip)
+	{
+		activeLED = RedLEDStrip;
+	}
+	else
+	{
+		activeLED = WhiteLEDStrip;
+	}
+}
+
+bool OnceEverySecond() {
+	if (millis() - lastTimeReading > 1000)
+	{
+		lastTimeReading = millis();
+		return true;
+	}
+	else
+	{
+		return false;
 	}
 }
 
@@ -244,6 +277,26 @@ void ReadTime()
 {
 	// retrieve data from DS3231
 	readDS3231time(&second, &minute, &hour, &dayOfWeek, &dayOfMonth, &month, &year);
+}
+
+void CheckAlarm()
+{
+	if (hour == alarmHour)
+	{
+		if (minute == alarmMinute)
+		{
+			Alarm();
+		}
+	}
+}
+
+void Alarm()
+{
+	activeLED = WhiteLEDStrip;
+	alarmActive = true;
+	alarmTurnedOnAt = millis();
+	alarmStepTime = millis();
+	backlightManuallyTurnedOff = false;
 }
 
 void RefreshLCD()
@@ -263,7 +316,7 @@ void RefreshLCD()
 	{
 		lcd.print(" ");
 	}
-	if (activeLED == LEDStrip12V)
+	if (activeLED == WhiteLEDStrip)
 	{
 		lcd.write(byte(0));
 	}
@@ -305,23 +358,17 @@ void PrintTimeValueOnLCD(byte value)
 	lcd.print(value);
 }
 
-void CheckAlarm()
-{
-	if (hour == alarmHour)
+void ChangeBrightness(int step) {
+	brightness += step;
+	if (brightness > 255)
 	{
-		if (minute == alarmMinute)
-		{
-			Alarm();
-		}
+		brightness = 255;
 	}
-}
-
-void Alarm()
-{
-	alarmActive = true;
-	alarmTurnedOnAt = millis();
-	alarmStepTime = millis();
-	backlightManuallyTurnedOff = false;
+	if (brightness < 0)
+	{
+		brightness = 0;
+	}
+	SetBrightness(brightness);
 }
 
 void IncreaseAlarmHour()
@@ -356,68 +403,8 @@ void ToggleAlarm()
 	RefreshLCD();
 }
 
-void ChangeBrightness(int step) {
-	brightness += step;
-	if (brightness > 255)
-	{
-		brightness = 255;
-	}
-	if (brightness < 0)
-	{
-		brightness = 0;
-	}
-	SetBrightness(brightness);
-}
-
-void SetBrightness(int brightnessValue)
-{
-	analogWrite(activeLED, brightnessValue);
-	if (brightnessValue == 0)
-	{
-		lightOn = false;
-	}
-	else
-	{
-		lightOn = true;
-	}
-}
-
-void LightOn() {
-	if (brightness != 255)
-	{
-		brightness = 255;
-		SetBrightness(brightness);
-	}
-	else
-	{
-		return;
-	}
-}
-
-void LightOff() {
-	if (brightness != 0)
-	{
-		brightness = 0;
-		SetBrightness(brightness);
-	}
-	else
-	{
-		return;
-	}
-}
-
-void PushedAnyButton()
-{
-	if (alarmActive)
-	{
-		alarmActive = false;
-		brightness = 0;
-		SetBrightness(brightness);
-	}
-}
-
 void CheckDayOrNight() {
-	if ((hour > 20) || (hour >= 0 && hour < 6))
+	if ((hour >= 21) || (hour >= 0 && hour < 9))
 	{
 		isNight = true;
 	}
@@ -427,24 +414,21 @@ void CheckDayOrNight() {
 	}
 }
 
-bool HourStart() {
-	if (second == 0)
+void SetLCDBacklight() {
+	if (backlightManuallyTurnedOff)
 	{
-		if (minute == 0)
-		{
-			return true;
-		}
+		analogWrite(backlightLCD, 0);
 	}
-	return false;
-}
-
-void SetSleepModeAtSleepTime() {
-	if (hour == hourInTheNightToSetSleepMode)
+	else
 	{
-		backlightManuallyTurnedOff = true;
-		brightness = 0;
-		SetBrightness(brightness);
-		activeLED = LEDStrip12V;
+		if (isNight)
+		{
+			analogWrite(backlightLCD, backlightBrightnessForNight);
+		}
+		else
+		{
+			analogWrite(backlightLCD, backlightBrightnessForDay);
+		}
 	}
 }
 
