@@ -1,5 +1,5 @@
 # Arduino Wake Up Light
-An alarm clock which turns on the lights very slowly. Lights can be controlled manually with an IR remote.
+An alarm clock which turns on the lights very slowly. Lights can be controlled manually with an IR remote. White LED strip is for the alarm, Red LED strip is for soft light to use in the evening. 
 
 # Step 1: Build the circuit
 
