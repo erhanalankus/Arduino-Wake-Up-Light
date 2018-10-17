@@ -3,7 +3,7 @@ An alarm clock which turns on the lights very slowly. Lights can be controlled m
 
 # Step 1: Build the circuit
 
-![WiringDiagram](https://raw.githubusercontent.com/erhanalankus/Arduino-Wake-Up-Light/master/wiring-diagram.png)
+![](wiring-diagram.png)
 
 # Step 2: Set the time
 
