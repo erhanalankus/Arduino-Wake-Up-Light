@@ -85,6 +85,7 @@ void setup()
 	analogWrite(WhiteLEDStrip, 0);
 	analogWrite(RedLEDStrip, 0);
 
+	ReadTime();
 	CheckDayOrNight();
 
 	/* set the initial time here:
