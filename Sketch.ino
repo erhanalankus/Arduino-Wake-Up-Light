@@ -6,7 +6,7 @@
 // You can find the address of your I2C device using https://playground.arduino.cc/Main/I2cScanner
 LiquidCrystal_I2C lcd(0x3F, 16, 2);
 
-// 14 is A0 on Arduino UNO
+// 14 is A0 on Arduino UNO, this is the pin for the IR receiver
 int RECV_PIN = 14;
 IRrecv irrecv(RECV_PIN);
 decode_results results;
@@ -29,27 +29,34 @@ byte sunCharacter[8] = {
 	0b00100
 };
 
+// Brightness step variables set the amount of brightness to change, while using the lights manually(not for alarm).
 int brightness = 0;
 int brightnessStep = 51;
 int smallBrightnessStep = 10;
 bool lightOn = false;
 
-byte second, minute, hour, dayOfWeek, dayOfMonth, month, year; // Values to read from DS3231 RTC Module
+// Values to read from DS3231 RTC Module
+byte second, minute, hour, dayOfWeek, dayOfMonth, month, year;
+
+// Default alarm time, in case of power loss during the night, alarm time will reset to this.
 byte alarmHour = 6;
 byte alarmMinute = 30;
+
 bool alarmOn = true;
 bool alarmActive = false;
+long alarmTurnedOnAt = 0;
+long alarmStepTime = 0;
 long lastTimeReading = 0;
 
-long alarmTurnedOnAt = 0;
-long alarmDuration = 14400000; //4 hours.
-long alarmStepTime = 0;
+// Alarm will end after 4 hours
+long alarmDuration = 14400000;
 
 int backlightBrightnessForNight = 1;
 int backlightBrightnessForDay = 255;
 bool isNight = false;
 bool backlightManuallyTurnedOff = false;
 
+// decToBcd & bcdToDec are used for reading the time from the RTC module
 #define DS3231_I2C_ADDRESS 0x68
 // Convert normal decimal numbers to binary coded decimal
 byte decToBcd(byte val)
@@ -66,17 +73,18 @@ void setup()
 {
 	Wire.begin();
 
-	// initialize the LCD
-	lcd.createChar(0, sunCharacter);
 	lcd.begin();
+	lcd.createChar(0, sunCharacter);
 
 	irrecv.enableIRIn();
 
 	pinMode(backlightLCD, OUTPUT);
 	pinMode(WhiteLEDStrip, OUTPUT);
 	pinMode(RedLEDStrip, OUTPUT);
+
 	analogWrite(WhiteLEDStrip, 0);
 	analogWrite(RedLEDStrip, 0);
+
 	CheckDayOrNight();
 
 	/* set the initial time here:
@@ -91,14 +99,17 @@ void loop()
 	{
 		ReadTime();
 		lastTimeReading = millis();
-		if (second == 0)		//Once every minute
+
+		// Once every minute
+		if (second == 0)
 		{
 			if (alarmOn)
 			{
 				CheckAlarm();
 			}
 
-			if (minute == 0)	//Once every hour
+			// Once every hour
+			if (minute == 0)
 			{
 				CheckDayOrNight();
 			}
@@ -110,15 +121,18 @@ void loop()
 
 	if (alarmActive)
 	{
-		if (millis() - alarmTurnedOnAt < alarmDuration) //For the duration of alarm
+		// For the duration of alarm
+		if (millis() - alarmTurnedOnAt < alarmDuration)
 		{
-			if (millis() - alarmStepTime > 7000) //Once in 7 seconds, will  reach full brightness at 30 minutes
+			// Increase brightness 1 unit once in 7 seconds. The light will reach full brightness in 30 minutes.
+			if (millis() - alarmStepTime > 7000)
 			{
 				ChangeBrightness(1);
 				alarmStepTime = millis();
 			}
 		}
-		else //Once at the end of alarm duration
+		// Once at the end of alarm duration
+		else
 		{
 			brightness = 0;
 			SetBrightness(brightness);
@@ -126,7 +140,8 @@ void loop()
 		}
 	}
 
-	if (irrecv.decode(&results)) {		//If a button is pressed on the IR remote
+	// If a button is pressed on the IR remote, see GreatScott's video for how to read the codes for your remote(https://youtu.be/ftdJ0R_5NZk)
+	if (irrecv.decode(&results)) {
 		if (results.value == 0xFFA25D) //PLAY button
 		{
 			LightOn();
@@ -197,7 +212,7 @@ void loop()
 
 		irrecv.resume();
 
-		// This delay is recommended by the library.
+		// This delay is recommended by the IRRemote library.
 		delay(100);
 	}
 }
@@ -432,8 +447,8 @@ void SetLCDBacklight() {
 	}
 }
 
-void setDS3231time(byte second, byte minute, byte hour, byte dayOfWeek, byte
-	dayOfMonth, byte month, byte year)
+void setDS3231time(byte second, byte minute, byte hour, byte dayOfWeek,
+	byte dayOfMonth, byte month, byte year)
 {
 	// sets time and date data to DS3231
 	Wire.beginTransmission(DS3231_I2C_ADDRESS);
@@ -447,13 +462,8 @@ void setDS3231time(byte second, byte minute, byte hour, byte dayOfWeek, byte
 	Wire.write(decToBcd(year)); // set year (0 to 99)
 	Wire.endTransmission();
 }
-void readDS3231time(byte *second,
-	byte *minute,
-	byte *hour,
-	byte *dayOfWeek,
-	byte *dayOfMonth,
-	byte *month,
-	byte *year)
+void readDS3231time(byte *second, byte *minute, byte *hour, byte *dayOfWeek,
+	byte *dayOfMonth, byte *month, byte *year)
 {
 	Wire.beginTransmission(DS3231_I2C_ADDRESS);
 	Wire.write(0); // set DS3231 register pointer to 00h
