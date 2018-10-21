@@ -31,3 +31,5 @@ You can buy all the parts on aliexpress.
 ![](perfboard-front.jpg)
 
 ![](perfboard-back.jpg)
+
+You can find the Fritzing Sketch file that I used to design the circuit on perfboard in this repository. File name is "Wake Up Light Perfboard.fzz". It is incomplete but it can be helpful. 
