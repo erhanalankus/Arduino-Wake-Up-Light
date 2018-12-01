@@ -113,6 +113,10 @@ void loop()
 			if (minute == 0)
 			{
 				CheckDayOrNight();
+				if (hour == 1)
+				{
+					LightOff();
+				}
 			}
 		}
 
@@ -434,6 +438,10 @@ void SetLCDBacklight() {
 	if (backlightManuallyTurnedOff)
 	{
 		analogWrite(backlightLCD, 0);
+	}
+	else if (alarmActive)
+	{
+		analogWrite(backlightLCD, brightness);
 	}
 	else
 	{
