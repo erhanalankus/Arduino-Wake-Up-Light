@@ -14,6 +14,7 @@ decode_results results;
 const int backlightLCD = 9;
 const int WhiteLEDStrip = 5;
 const int RedLEDStrip = 6;
+const int ticker = 2;
 
 int activeLED = WhiteLEDStrip;
 
@@ -48,8 +49,15 @@ long alarmTurnedOnAt = 0;
 long alarmStepTime = 0;
 long lastTimeReading = 0;
 
-// Alarm will end after 4 hours
-long alarmDuration = 14400000;
+// Alarm will end after 3 hours
+long alarmDuration = 10800000;
+long startingTickerInterval = 500;
+long tickerInterval = 0;
+long tickerStateChangeTime = 10000; // Half hour 1800000
+long tickerStateChangedAt = 0;
+long tickerToggledAt = 0;
+bool tickerActive = false;
+bool tickerOn = false;
 
 int backlightBrightnessForNight = 1;
 int backlightBrightnessForDay = 255;
@@ -73,7 +81,7 @@ void setup()
 {
 	Wire.begin();
 
-	lcd.begin();
+	lcd.begin(16, 2);
 	lcd.createChar(0, sunCharacter);
 
 	irrecv.enableIRIn();
@@ -81,9 +89,11 @@ void setup()
 	pinMode(backlightLCD, OUTPUT);
 	pinMode(WhiteLEDStrip, OUTPUT);
 	pinMode(RedLEDStrip, OUTPUT);
+	pinMode(ticker, OUTPUT);
 
 	analogWrite(WhiteLEDStrip, 0);
 	analogWrite(RedLEDStrip, 0);
+	tickerInterval = startingTickerInterval;
 
 	ReadTime();
 	CheckDayOrNight();
@@ -135,6 +145,13 @@ void loop()
 				ChangeBrightness(1);
 				alarmStepTime = millis();
 			}
+
+			if (millis() - alarmTurnedOnAt > tickerStateChangeTime)
+			{
+				tickerActive = true;
+				tickerStateChangedAt = millis();
+				tickerToggledAt = millis();
+			}
 		}
 		// Once at the end of alarm duration
 		else
@@ -142,6 +159,23 @@ void loop()
 			brightness = 0;
 			SetBrightness(brightness);
 			alarmActive = false;
+			tickerActive = false;
+			tickerStateChangedAt = millis();
+			tickerInterval = startingTickerInterval;
+		}
+	}
+
+	if (tickerActive)
+	{
+		if (millis() - tickerToggledAt > tickerInterval)
+		{
+			tickerToggledAt = millis();
+			ToggleTicker();
+		}
+		if (millis() - tickerStateChangedAt > tickerStateChangeTime)
+		{
+			tickerStateChangedAt = millis();
+			DecreaseTickerInterval();
 		}
 	}
 
@@ -219,6 +253,27 @@ void loop()
 
 		// This delay is recommended by the IRRemote library.
 		delay(100);
+	}
+}
+
+void DecreaseTickerInterval() {
+	if (tickerInterval % 2 == 1)
+	{
+		tickerInterval -= 1;
+	}
+	tickerInterval /= 2;
+}
+
+void ToggleTicker() {
+	if (tickerOn)
+	{
+		digitalWrite(ticker, LOW);
+		tickerOn = false;
+	}
+	else
+	{
+		digitalWrite(ticker, HIGH);
+		tickerOn = true;
 	}
 }
 
@@ -350,11 +405,11 @@ void RefreshLCD()
 	lcd.setCursor(0, 1);
 	if (!alarmActive)
 	{
-		lcd.print("Alarm:");
+		lcd.print("Alarm=");
 	}
 	else
 	{
-		lcd.print("ALARM:");
+		lcd.print("ALARM=");
 	}
 	PrintTimeValueOnLCD(alarmHour);
 	lcd.print(":");
@@ -471,8 +526,8 @@ void setDS3231time(byte second, byte minute, byte hour, byte dayOfWeek,
 	Wire.write(decToBcd(year)); // set year (0 to 99)
 	Wire.endTransmission();
 }
-void readDS3231time(byte *second, byte *minute, byte *hour, byte *dayOfWeek,
-	byte *dayOfMonth, byte *month, byte *year)
+void readDS3231time(byte* second, byte* minute, byte* hour, byte* dayOfWeek,
+	byte* dayOfMonth, byte* month, byte* year)
 {
 	Wire.beginTransmission(DS3231_I2C_ADDRESS);
 	Wire.write(0); // set DS3231 register pointer to 00h
