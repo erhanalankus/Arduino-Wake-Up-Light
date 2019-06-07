@@ -51,9 +51,9 @@ long lastTimeReading = 0;
 
 // Alarm will end after 3 hours
 long alarmDuration = 10800000;
-long startingTickerInterval = 500;
-long tickerInterval = 0;
-long tickerStateChangeTime = 10000; // Half hour 1800000
+long startingTickerInterval = 2000;
+long tickerInterval = startingTickerInterval;
+long tickerStateChangeTime = 600000; // Ten minutes 600000
 long tickerStateChangedAt = 0;
 long tickerToggledAt = 0;
 bool tickerActive = false;
@@ -81,7 +81,7 @@ void setup()
 {
 	Wire.begin();
 
-	lcd.begin(16, 2);
+	lcd.begin();
 	lcd.createChar(0, sunCharacter);
 
 	irrecv.enableIRIn();
@@ -93,7 +93,6 @@ void setup()
 
 	analogWrite(WhiteLEDStrip, 0);
 	analogWrite(RedLEDStrip, 0);
-	tickerInterval = startingTickerInterval;
 
 	ReadTime();
 	CheckDayOrNight();
@@ -102,6 +101,7 @@ void setup()
 	   DS3231 seconds, minutes, hours, day(1 for sunday, 2 for monday...), date, month, year
 	   Set the time by uncommenting the following line after editing the values and load the sketch on your arduino. Right after that, comment out the line and load the sketch again. */
 	   // setDS3231time(00,59,23,1,31,12,16);
+	setDS3231time(00, 28, 11, 6, 7, 6, 19);
 }
 
 void loop()
@@ -146,11 +146,12 @@ void loop()
 				alarmStepTime = millis();
 			}
 
-			if (millis() - alarmTurnedOnAt > tickerStateChangeTime)
+			if (millis() - tickerStateChangedAt > tickerStateChangeTime)
 			{
 				tickerActive = true;
 				tickerStateChangedAt = millis();
 				tickerToggledAt = millis();
+				DecreaseTickerInterval();
 			}
 		}
 		// Once at the end of alarm duration
@@ -171,11 +172,6 @@ void loop()
 		{
 			tickerToggledAt = millis();
 			ToggleTicker();
-		}
-		if (millis() - tickerStateChangedAt > tickerStateChangeTime)
-		{
-			tickerStateChangedAt = millis();
-			DecreaseTickerInterval();
 		}
 	}
 
@@ -320,6 +316,9 @@ void PushedAnyButton()
 	{
 		alarmActive = false;
 		LightOff();
+		tickerActive = false;
+		tickerStateChangedAt = millis();
+		tickerInterval = startingTickerInterval;
 	}
 }
 
@@ -370,6 +369,7 @@ void Alarm()
 	activeLED = WhiteLEDStrip;
 	alarmActive = true;
 	alarmTurnedOnAt = millis();
+	tickerStateChangedAt = millis();
 	alarmStepTime = millis();
 	backlightManuallyTurnedOff = false;
 }
@@ -405,11 +405,11 @@ void RefreshLCD()
 	lcd.setCursor(0, 1);
 	if (!alarmActive)
 	{
-		lcd.print("Alarm=");
+		lcd.print("Alarm:");
 	}
 	else
 	{
-		lcd.print("ALARM=");
+		lcd.print("ALARM:");
 	}
 	PrintTimeValueOnLCD(alarmHour);
 	lcd.print(":");
