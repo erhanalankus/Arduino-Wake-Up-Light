@@ -6,7 +6,7 @@ An alarm clock which turns on the lights very slowly. Lights can be controlled m
 
 # Step 1: Build the circuit
 
-![](wiring-diagram.png)
+![](wiring-diagram-buzzer.png)
 
 # Step 2: Set the time
 
