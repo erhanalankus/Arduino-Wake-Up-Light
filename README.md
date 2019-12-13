@@ -10,7 +10,7 @@ An alarm clock which turns on the lights very slowly. Lights can be controlled m
 
 # Step 2: Set the time
 
-Before uploading the sketch to your Arduino, change the values at line 85 with the current values for the time and date and uncomment the line. Upload the sketch. Comment out line 85 and upload again. The time won't be lost unless you remove the battery from the DS3231 RTC module.
+Before uploading the sketch to your Arduino, change the arguments of the setDS3231time method call(in the setup method) with the current values for the time and date and uncomment the method call. Upload the sketch. Comment out the method call and upload again. The time won't be lost unless you remove the battery from the DS3231 RTC module.
 
 # Step 3: Set the remote
 
