@@ -14,7 +14,7 @@ Before uploading the sketch to your Arduino, change the arguments of the setDS32
 
 # Step 3: Set the remote
 
-Go to line 129. There you will find what happens for which remote button. Those values most likely won't work with the remote that you are using. Watch this video and you'll learn how to setup your remote: https://youtu.be/ftdJ0R_5NZk
+Go to the "if (irrecv.decode(&results)) {...}" block. There you will find what happens for which remote button. Those values most likely won't work with the remote that you are using. Watch this video and you'll learn how to setup your remote: https://youtu.be/ftdJ0R_5NZk
 
 # Step 4: Using the device
 
