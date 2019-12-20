@@ -18,11 +18,10 @@ Go to the "if (irrecv.decode(&results)) {...}" block. There you will find what h
 
 # Step 4: Using the device
 
-When the alarm is active, brightness of the lights will increase 1 unit every 7 seconds. Maximum brightness value is 255. Current brightness value is displayed on the top right of the LCD screen. It will take 30 minutes to reach full brightness and after the time stated in the alarmDuration variable(3 hours), the light will turn off. You can change alarm duration and speed by changing the values of alarmDuration variable and searching for the value 7000(I should have made it a variable). Pressing any button will deactivate the alarm.
+When the alarm is active, brightness of the lights will increase 1 unit every 7 seconds. Maximum brightness value is 255. Current brightness value is displayed on the top right of the LCD screen. It will take 30 minutes to reach full brightness and after the time stated in the alarmDuration variable(3 hours), the light will turn off. You can change alarm duration and speed by changing the values of alarmDuration variable and searching for the value 7000(I should have made it a variable). Pressing any button will deactivate the alarm. If "night light" function is on, a very weak red light will turn on at 01:00. If it's the "night light" function is off, all the lights will turn off at 01:00.
 
 ![](display-items_.png)
 
-You can buy all the parts on aliexpress.
 
 # More Pictures
 
