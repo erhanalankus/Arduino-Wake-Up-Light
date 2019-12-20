@@ -1,12 +1,12 @@
 # Arduino Wake Up Light
 
-![](box-outside.jpg)
+![](images/box-outside.jpg)
 
 An alarm clock which turns on the lights very slowly. Lights can be controlled manually with an IR remote. White LED strip is for the alarm, Red LED strip is for soft light to use in the evening. It also has a buzzer, which is used to making gentle "tick" sounds when the light reaches full brightness(after 30 minutes). The tick frequency starts at one tick every two seconds, it doubles its speed after every ten minutes. The sound can be turned off.
 
 # Step 1: Build the circuit
 
-![](wiring-diagram-buzzer.png)
+![](images/wiring-diagram-buzzer.png)
 
 # Step 2: Set the time
 
@@ -18,24 +18,24 @@ Go to the "if (irrecv.decode(&results)) {...}" block. There you will find what h
 
 This is the remote I'm using:
 
-![](remote-functions.png)
+![](images/remote-functions.png)
 
 # Step 4: Using the device
 
 When the alarm is active, brightness of the lights will increase 1 unit every 7 seconds. Maximum brightness value is 255. Current brightness value is displayed on the top right of the LCD screen. It will take 30 minutes to reach full brightness and after the time stated in the alarmDuration variable(3 hours), the light will turn off. You can change alarm duration and speed by changing the values of alarmDuration variable and searching for the value 7000(I should have made it a variable). Pressing any button will deactivate the alarm. If "night light" function is on, a very weak red light will turn on at 01:00. If it's the "night light" function is off, all the lights will turn off at 01:00.
 
-![](display-items_.png)
+![](images/display-items_.png)
 
 # More Pictures
 
-![](box-inside.jpg)
+![](images/box-inside.jpg)
 
-![](circuit-with-buzzer.jpg)
+![](images/circuit-with-buzzer.jpg)
 
-![](leds.jpg)
+![](images/leds.jpg)
 
-![](perfboard-front.jpg)
+![](images/perfboard-front.jpg)
 
-![](perfboard-back.jpg)
+![](images/perfboard-back.jpg)
 
 You can find the Fritzing Sketch file that I used to design the circuit on perfboard in this repository. File name is "Wake Up Light Perfboard.fzz". It is incomplete but it can be helpful. 
