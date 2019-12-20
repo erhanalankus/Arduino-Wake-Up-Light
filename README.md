@@ -16,13 +16,15 @@ Before uploading the sketch to your Arduino, change the arguments of the setDS32
 
 Go to the "if (irrecv.decode(&results)) {...}" block. There you will find what happens for which remote button. Those values most likely won't work with the remote that you are using. Watch this video and you'll learn how to setup your remote: https://youtu.be/ftdJ0R_5NZk
 
+This is the remote I'm using:
+
+![](remote-functions.png)
+
 # Step 4: Using the device
 
 When the alarm is active, brightness of the lights will increase 1 unit every 7 seconds. Maximum brightness value is 255. Current brightness value is displayed on the top right of the LCD screen. It will take 30 minutes to reach full brightness and after the time stated in the alarmDuration variable(3 hours), the light will turn off. You can change alarm duration and speed by changing the values of alarmDuration variable and searching for the value 7000(I should have made it a variable). Pressing any button will deactivate the alarm. If "night light" function is on, a very weak red light will turn on at 01:00. If it's the "night light" function is off, all the lights will turn off at 01:00.
 
 ![](display-items_.png)
-
-![](remote-functions.png)
 
 # More Pictures
 
