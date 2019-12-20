@@ -22,6 +22,7 @@ When the alarm is active, brightness of the lights will increase 1 unit every 7 
 
 ![](display-items_.png)
 
+![](remote-functions.png)
 
 # More Pictures
 
